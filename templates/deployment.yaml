@@ -1,0 +1,47 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-helm-module
+  labels:
+    app.kubernetes.io/name: nginx-app
+    app.kubernetes.io/instance: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nginx-app
+      app.kubernetes.io/instance: nginx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nginx-app
+        app.kubernetes.io/instance: nginx
+    spec:
+      serviceAccountName: nginx-sa
+      volumes:
+      - name: nginx-volume
+        configMap:
+          name: nginx-cm
+          items:
+          - key: index.html
+            path: index.html
+      containers:
+        - name: testchart
+          image: "nginx:1.16.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          volumeMounts:
+          - name: nginx-volume
+            mountPath: /usr/share/nginx/html
